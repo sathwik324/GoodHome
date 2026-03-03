@@ -15,7 +15,7 @@ function Dashboard() {
       return;
     }
 
-    axios.get("https://goodhome-backend.onrender.com/api/user/me", {
+    axios.get("https://goodhome-backend.onrender.com/api/auth/me", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
