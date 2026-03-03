@@ -1,23 +1,41 @@
 :root {
-  /* Color palette inspired by Discord dark theme */
-  --color-bg: #36393F;
-  /* Main background */
-  --color-card: #2F3136;
-  /* Card / surface */
-  --color-primary: #5865F2;
-  /* Accent / primary actions */
-  --color-text-primary: #FFFFFF;
-  /* Primary text */
-  --color-text-secondary: #B9BBBE;
-  /* Secondary text */
+  /* Modern Dark Theme Palette */
+  --color-bg: #0F172A;
+  /* Slate 900 Background */
+  --color-card: #1E293B;
+  /* Slate 800 Surface */
+  --color-card-hover: #334155;
+  /* Slate 700 */
+  --color-primary: #6366F1;
+  /* Indigo 500 */
+  --color-primary-hover: #4F46E5;
+  /* Indigo 600 */
 
-  /* Spacing scale */
+  --color-text-primary: #F8FAFC;
+  /* Slate 50 */
+  --color-text-secondary: #94A3B8;
+  /* Slate 400 */
+
+  /* Inputs & Borders */
+  --color-input-bg: #0F172A;
+  --color-border: #334155;
+  --color-border-glow: #6366F180;
+  /* Indigo with opacity */
+
+  /* Spacing */
   --spacing-sm: 0.5rem;
   --spacing-md: 1rem;
   --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
 
-  /* Border radius scale */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  /* Border radius */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  /* Modern Shadows for Depth */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  --shadow-glow: 0 0 15px var(--color-border-glow);
 }

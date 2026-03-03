@@ -1,35 +1,135 @@
-/* Global styles applying the dark theme variables */
 @import "./theme.css";
 
-/* Apply smooth transitions to most properties */
-* {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
-
+/* Base Body Styles */
 html,
 body {
     margin: 0;
     padding: 0;
-    background-color: var(--color-bg);
+    min-height: 100vh;
+    /* Radial gradient for a modern deep background */
+    background: radial-gradient(circle at top right, #1E1B4B, var(--color-bg));
     color: var(--color-text-primary);
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    line-height: 1.5;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* Card component style */
+/* Base transitions applied globally */
+* {
+    box-sizing: border-box;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Layout Utilities */
+.page-container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--spacing-md);
+}
+
+/* Glassmorphic/Modern Card */
 .card {
     background-color: var(--color-card);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    width: 100%;
+    max-width: 400px;
+    box-shadow: var(--shadow-lg);
+}
+
+/* Typography elements inside Card */
+.card h2 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-sm);
+    font-weight: 700;
+    font-size: 1.75rem;
+}
+
+.card p.subtitle {
+    color: var(--color-text-secondary);
+    margin-top: 0;
+    font-size: 0.95rem;
+}
+
+/* Form Elements */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+input {
+    width: 100%;
+    background-color: var(--color-input-bg);
+    border: 1px solid var(--color-border);
     color: var(--color-text-primary);
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    outline: none;
 }
 
-/* Primary action style (e.g., buttons, links) */
-.primary {
+input:focus {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-glow);
+}
+
+input::placeholder {
+    color: var(--color-text-secondary);
+}
+
+/* Primary Button */
+.btn-primary {
+    width: 100%;
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: var(--spacing-sm);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-primary:active {
+    transform: translateY(1px);
+}
+
+/* Links */
+a {
     color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 500;
 }
 
-/* Secondary text */
-.text-secondary {
+a:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.auth-link {
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    text-align: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+/* Message / Alerts */
+.msg-alert {
+    margin-top: var(--spacing-md);
+    text-align: center;
+    font-size: 0.9rem;
     color: var(--color-text-secondary);
 }
