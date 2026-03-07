@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import api from "../api/axiosInstance";
-import { Hash, Send, Users, MessageCircle, CalendarDays } from "lucide-react";
+import { Hash, Send, Users, MessageCircle, CalendarDays, Plus, X } from "lucide-react";
 
 function formatTime(dateStr) {
     if (!dateStr) return "";
@@ -23,15 +23,17 @@ function ChannelsPage() {
     const [loading, setLoading] = useState(true);
     const [msgsLoading, setMsgsLoading] = useState(false);
 
+    // Create Channel State
+    const [showCreate, setShowCreate] = useState(false);
+    const [newChannelName, setNewChannelName] = useState("");
+    const [createError, setCreateError] = useState("");
+
     // Dashboard stats specifically for this group
     const [stats, setStats] = useState(null);
     const messagesEndRef = useRef(null);
 
-    // Fetch Channels & Stats on mount
-    useEffect(() => {
-        if (!groupId) return;
+    const fetchChannelsAndStats = () => {
         setLoading(true);
-
         Promise.all([
             api.get(`/groups/${groupId}/channels`).catch(() => ({ data: [] })),
             api.get(`/dashboard?groupId=${groupId}`).catch(() => ({ data: {} }))
@@ -39,9 +41,17 @@ function ChannelsPage() {
             const chData = chRes.data || [];
             setChannels(chData);
             setStats(stRes.data);
-            if (chData.length > 0) setActiveChannel(chData[0]._id);
+            if (chData.length > 0 && !activeChannel) {
+                setActiveChannel(chData[0]._id);
+            }
         }).finally(() => setLoading(false));
-    }, [groupId]);
+    };
+
+    // Fetch Channels & Stats on mount
+    useEffect(() => {
+        if (!groupId) return;
+        fetchChannelsAndStats();
+    }, [groupId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Fetch messages when active channel changes
     const fetchMessages = (channelId) => {
@@ -87,6 +97,24 @@ function ChannelsPage() {
             .catch(() => { });
     };
 
+    const handleCreateChannel = (e) => {
+        e.preventDefault();
+        if (!newChannelName.trim()) return;
+        setCreateError("");
+        api
+            .post(`/groups/${groupId}/channels`, { name: newChannelName })
+            .then((res) => {
+                setShowCreate(false);
+                setNewChannelName("");
+                const newCh = res.data?.channel || res.data;
+                setChannels((prev) => [...prev, newCh]);
+                setActiveChannel(newCh._id);
+            })
+            .catch((err) => {
+                setCreateError(err.response?.data?.message || "Failed to create channel");
+            });
+    };
+
     const getSenderName = (msg) => {
         if (msg.sender?.name) return msg.sender.name;
         if (msg.senderName) return msg.senderName;
@@ -122,7 +150,18 @@ function ChannelsPage() {
             {/* Main Split Layout */}
             <div className="channels-layout" style={{ flex: 1, height: "auto" }}>
                 <div className="channel-list">
-                    <h4 className="channel-list-title">Channels</h4>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingRight: "16px", marginBottom: "8px" }}>
+                        <h4 className="channel-list-title" style={{ marginBottom: 0 }}>Channels</h4>
+                        <button
+                            onClick={() => setShowCreate(true)}
+                            style={{ background: "none", border: "none", color: "var(--color-text-secondary)", cursor: "pointer", display: "flex", padding: "4px", borderRadius: "4px" }}
+                            className="back-btn-hover"
+                            title="Create Channel"
+                        >
+                            <Plus size={16} />
+                        </button>
+                    </div>
+
                     {channels.map((ch) => (
                         <button
                             key={ch._id}
@@ -134,7 +173,12 @@ function ChannelsPage() {
                         </button>
                     ))}
                     {channels.length === 0 && (
-                        <p style={{ padding: "0 16px", color: "var(--color-text-secondary)", fontSize: "0.85rem" }}>No channels yet</p>
+                        <div style={{ padding: "16px", textAlign: "center", color: "var(--color-text-secondary)" }}>
+                            <p style={{ fontSize: "0.85rem", marginBottom: "12px" }}>No channels yet</p>
+                            <button className="btn-primary" onClick={() => setShowCreate(true)} style={{ padding: "6px 12px", fontSize: "0.8rem", margin: "0 auto", display: "flex", alignItems: "center", gap: "6px" }}>
+                                <Plus size={14} /> Create Channel
+                            </button>
+                        </div>
                     )}
                 </div>
 
@@ -148,6 +192,12 @@ function ChannelsPage() {
                         {msgsLoading && <p style={{ color: "var(--color-text-secondary)", fontSize: "0.85rem" }}>Loading messages...</p>}
                         {!msgsLoading && messages.length === 0 && activeChannel && (
                             <p style={{ color: "var(--color-text-secondary)", fontSize: "0.85rem" }}>No messages yet. Say hello!</p>
+                        )}
+                        {!activeChannel && channels.length === 0 && (
+                            <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center", color: "var(--color-text-secondary)", flexDirection: "column", gap: "12px" }}>
+                                <Hash size={48} opacity={0.2} />
+                                <p>Create a channel to start chatting</p>
+                            </div>
                         )}
                         {messages.map((msg) => (
                             <div className="message-item" key={msg._id}>
@@ -168,7 +218,7 @@ function ChannelsPage() {
 
                     <form className="message-input" onSubmit={handleSend}>
                         <input
-                            placeholder={`Message #${channelName}...`}
+                            placeholder={channelName ? `Message #${channelName}...` : "Create a channel..."}
                             value={newMsg}
                             onChange={(e) => setNewMsg(e.target.value)}
                             disabled={!activeChannel}
@@ -179,6 +229,29 @@ function ChannelsPage() {
                     </form>
                 </div>
             </div>
+
+            {/* Create Channel Modal */}
+            {showCreate && (
+                <div className="modal-overlay" onClick={() => setShowCreate(false)} style={{ zIndex: 100 }}>
+                    <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>Create Channel</h3>
+                            <button className="modal-close" onClick={() => setShowCreate(false)}><X size={20} /></button>
+                        </div>
+                        <form onSubmit={handleCreateChannel}>
+                            <input
+                                placeholder="Channel name (e.g. general, plans)"
+                                value={newChannelName}
+                                onChange={(e) => setNewChannelName(e.target.value)}
+                                required
+                                autoFocus
+                            />
+                            <button className="btn-accent" type="submit">Create Channel</button>
+                            {createError && <p className="settings-msg" style={{ color: "#F87171" }}>{createError}</p>}
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
