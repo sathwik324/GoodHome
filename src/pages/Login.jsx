@@ -24,8 +24,9 @@ function Login() {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const userData = meRes.data;
+            console.log("Login response user:", userData);
 
-            // 3. Save both token AND user to AuthContext + localStorage
+            // 3. Save both token AND user via AuthContext (uses sessionStorage)
             login(token, userData);
 
             setMsg("Login successful");

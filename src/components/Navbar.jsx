@@ -4,7 +4,8 @@ function Navbar() {
       <h2>GoodHome</h2>
       <button
         onClick={() => {
-          localStorage.removeItem("token");
+          sessionStorage.removeItem("token");
+          sessionStorage.removeItem("user");
           window.location.href = "/";
         }}
       >

@@ -11,7 +11,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     axios
       .get(`${API}/dashboard`, {
         headers: { Authorization: `Bearer ${token}` },
