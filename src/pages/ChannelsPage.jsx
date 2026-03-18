@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import api from "../api/axiosInstance";
-import { Hash, Send, Users, MessageCircle, CalendarDays, Plus, X } from "lucide-react";
+import { Hash, Send, Users, MessageCircle, CalendarDays, Plus, X, Trash2 } from "lucide-react";
 
 function formatTime(dateStr) {
     if (!dateStr) return "";
@@ -15,7 +15,7 @@ function formatTime(dateStr) {
 }
 
 function ChannelsPage() {
-    const { user, groupId } = useOutletContext();
+    const { user, groupId, group } = useOutletContext();
     const [channels, setChannels] = useState([]);
     const [activeChannel, setActiveChannel] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -97,6 +97,29 @@ function ChannelsPage() {
             .catch(() => { });
     };
 
+    const handleDeleteChannel = (e, channelId) => {
+        e.stopPropagation();
+        if (!window.confirm("Delete this channel and all its messages?")) return;
+        api
+            .delete(`/groups/${groupId}/channels/${channelId}`)
+            .then(() => {
+                setChannels((prev) => prev.filter((c) => c._id !== channelId));
+                if (activeChannel === channelId) {
+                    const remaining = channels.filter((c) => c._id !== channelId);
+                    setActiveChannel(remaining.length > 0 ? remaining[0]._id : null);
+                    if (remaining.length === 0) setMessages([]);
+                }
+            })
+            .catch(() => { });
+    };
+
+    const handleDeleteMessage = (msgId) => {
+        api
+            .delete(`/channels/${activeChannel}/messages/${msgId}`)
+            .then(() => setMessages((prev) => prev.filter((m) => m._id !== msgId)))
+            .catch(() => { });
+    };
+
     const handleCreateChannel = (e) => {
         e.preventDefault();
         if (!newChannelName.trim()) return;
@@ -167,9 +190,20 @@ function ChannelsPage() {
                             key={ch._id}
                             className={`channel-item${ch._id === activeChannel ? " active" : ""}`}
                             onClick={() => setActiveChannel(ch._id)}
+                            style={{ position: "relative" }}
                         >
                             <Hash size={16} />
-                            <span>{ch.name}</span>
+                            <span style={{ flex: 1 }}>{ch.name}</span>
+                            {user?._id === (group?.owner?._id || group?.owner) && (
+                                <Trash2
+                                    size={14}
+                                    className="channel-delete-icon"
+                                    style={{ opacity: 0.4, flexShrink: 0, transition: "opacity 0.2s" }}
+                                    onClick={(e) => handleDeleteChannel(e, ch._id)}
+                                    onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
+                                    onMouseLeave={(e) => e.currentTarget.style.opacity = 0.4}
+                                />
+                            )}
                         </button>
                     ))}
                     {channels.length === 0 && (
@@ -199,20 +233,36 @@ function ChannelsPage() {
                                 <p>Create a channel to start chatting</p>
                             </div>
                         )}
-                        {messages.map((msg) => (
-                            <div className="message-item" key={msg._id}>
-                                <div className="message-avatar">
-                                    {getSenderName(msg).charAt(0).toUpperCase()}
-                                </div>
-                                <div className="message-body">
-                                    <div className="message-meta">
-                                        <strong>{getSenderName(msg)}</strong>
-                                        <span>{formatTime(msg.createdAt || msg.time)}</span>
+                        {messages.map((msg) => {
+                            const senderId = msg.sender?._id || msg.sender;
+                            const isOwn = senderId === user?._id;
+                            const isGroupOwner = user?._id === (group?.owner?._id || group?.owner);
+                            const canDelete = isOwn || isGroupOwner;
+                            return (
+                                <div className="message-item" key={msg._id} style={{ position: "relative" }}>
+                                    <div className="message-avatar">
+                                        {getSenderName(msg).charAt(0).toUpperCase()}
                                     </div>
-                                    <p>{msg.text}</p>
+                                    <div className="message-body" style={{ flex: 1 }}>
+                                        <div className="message-meta">
+                                            <strong>{getSenderName(msg)}</strong>
+                                            <span>{formatTime(msg.createdAt || msg.time)}</span>
+                                        </div>
+                                        <p>{msg.text}</p>
+                                    </div>
+                                    {canDelete && (
+                                        <button
+                                            onClick={() => handleDeleteMessage(msg._id)}
+                                            style={{ background: "none", border: "none", color: "#F87171", cursor: "pointer", padding: "4px", borderRadius: "4px", opacity: 0, transition: "opacity 0.2s", position: "absolute", top: "8px", right: "8px" }}
+                                            className="msg-delete-btn"
+                                            title="Delete message"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    )}
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                         <div ref={messagesEndRef} />
                     </div>
 

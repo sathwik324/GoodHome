@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axiosInstance";
-import { Plus, LogIn, Users, X, Copy, ArrowRight, User } from "lucide-react";
+import { Plus, LogIn, Users, X, Copy, ArrowRight, User, Trash2, LogOut } from "lucide-react";
 import TopBar from "../components/dashboard/TopBar";
 import { useAuth } from "../context/AuthContext";
 
@@ -24,6 +24,9 @@ function GroupsPage() {
 
     // Invite Modal State
     const [showInviteModal, setShowInviteModal] = useState(null); // stores { code, groupName }
+
+    // Delete/Leave State
+    const [confirmAction, setConfirmAction] = useState(null); // { type: 'delete'|'leave', groupId, groupName }
     const [copied, setCopied] = useState(false);
 
     const fetchGroups = () => {
@@ -131,6 +134,34 @@ function GroupsPage() {
         setTimeout(() => setCopied(false), 2000);
     };
 
+    const handleDeleteGroup = () => {
+        if (!confirmAction || confirmAction.type !== 'delete') return;
+        api
+            .delete(`/groups/${confirmAction.groupId}`)
+            .then(() => {
+                setGroups((prev) => prev.filter((g) => g._id !== confirmAction.groupId));
+                setConfirmAction(null);
+            })
+            .catch((err) => {
+                setError(err.response?.data?.message || "Failed to delete group");
+                setConfirmAction(null);
+            });
+    };
+
+    const handleLeaveGroup = () => {
+        if (!confirmAction || confirmAction.type !== 'leave') return;
+        api
+            .post(`/groups/${confirmAction.groupId}/leave`)
+            .then(() => {
+                setGroups((prev) => prev.filter((g) => g._id !== confirmAction.groupId));
+                setConfirmAction(null);
+            })
+            .catch((err) => {
+                setError(err.response?.data?.message || "Failed to leave group");
+                setConfirmAction(null);
+            });
+    };
+
     return (
         <div className="dashboard-layout">
             <div className="dashboard-main" style={{ marginLeft: 0 }}>
@@ -198,6 +229,15 @@ function GroupsPage() {
                                             <button className="btn-outline" onClick={(e) => handleFetchInvite(e, group._id, group.name)}>
                                                 <Copy size={14} /> Invite Code
                                             </button>
+                                            {user?._id === (group.owner?._id || group.owner) ? (
+                                                <button className="btn-outline" style={{ borderColor: "#F87171", color: "#F87171" }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmAction({ type: 'delete', groupId: group._id, groupName: group.name }); }}>
+                                                    <Trash2 size={14} /> Delete
+                                                </button>
+                                            ) : (
+                                                <button className="btn-outline" style={{ borderColor: "#FBBF24", color: "#FBBF24" }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmAction({ type: 'leave', groupId: group._id, groupName: group.name }); }}>
+                                                    <LogOut size={14} /> Leave
+                                                </button>
+                                            )}
                                             <Link to={`/groups/${group._id}/channels`} className="btn-outline" style={{ borderColor: "var(--color-primary)", color: "var(--color-primary)", textDecoration: "none" }}>
                                                 Open <ArrowRight size={14} />
                                             </Link>
@@ -287,6 +327,34 @@ function GroupsPage() {
                             {copied && <p className="success-temp-msg" style={{ marginBottom: "16px" }}>Copied!</p>}
                             <button className="btn-primary" style={{ width: "100%", justifyContent: "center" }} onClick={() => copyToClipboard(showInviteModal.code)}>
                                 <Copy size={18} /> {copied ? "Copied ✓" : "Copy Code"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirm Delete/Leave Modal */}
+            {confirmAction && (
+                <div className="modal-overlay" onClick={() => setConfirmAction(null)}>
+                    <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>{confirmAction.type === 'delete' ? 'Delete Group' : 'Leave Group'}</h3>
+                            <button className="modal-close" onClick={() => setConfirmAction(null)}><X size={20} /></button>
+                        </div>
+                        <p style={{ color: "var(--color-text-secondary)", margin: "0 0 24px" }}>
+                            {confirmAction.type === 'delete'
+                                ? `Are you sure you want to permanently delete "${confirmAction.groupName}"? This cannot be undone.`
+                                : `Are you sure you want to leave "${confirmAction.groupName}"? You will need a new invite code to rejoin.`
+                            }
+                        </p>
+                        <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+                            <button className="btn-outline" onClick={() => setConfirmAction(null)}>Cancel</button>
+                            <button
+                                className="btn-accent"
+                                style={{ background: confirmAction.type === 'delete' ? '#EF4444' : '#F59E0B' }}
+                                onClick={confirmAction.type === 'delete' ? handleDeleteGroup : handleLeaveGroup}
+                            >
+                                {confirmAction.type === 'delete' ? 'Delete Group' : 'Leave Group'}
                             </button>
                         </div>
                     </div>

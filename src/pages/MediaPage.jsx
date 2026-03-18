@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import api, { BACKEND_BASE } from "../api/axiosInstance";
-import { Upload, X, User, Calendar, Image as ImageIcon } from "lucide-react";
+import { Upload, X, User, Calendar, Image as ImageIcon, Trash2 } from "lucide-react";
 
 function MediaPage() {
-    const { user, groupId } = useOutletContext();
+    const { user, groupId, group } = useOutletContext();
     const navigate = useNavigate();
     const [media, setMedia] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -94,6 +94,22 @@ function MediaPage() {
         return String(item.uploader || "Unknown").substring(0, 8);
     };
 
+    const canDeleteMedia = (item) => {
+        if (!user) return false;
+        const uploaderId = item.uploader?._id || item.uploader;
+        const isUploader = uploaderId === user._id;
+        const isGroupOwner = user._id === (group?.owner?._id || group?.owner);
+        return isUploader || isGroupOwner;
+    };
+
+    const handleDeleteMedia = (e, mediaId) => {
+        e.stopPropagation();
+        api
+            .delete(`/media/${mediaId}`)
+            .then(() => setMedia((prev) => prev.filter((m) => m._id !== mediaId)))
+            .catch((err) => setError(err.response?.data?.message || "Failed to delete photo"));
+    };
+
     return (
         <div className="feature-page">
             <div className="feature-header">
@@ -154,12 +170,22 @@ function MediaPage() {
 
             <div className="media-grid">
                 {media.map((item) => (
-                    <div className="media-card" key={item._id} onClick={() => setLightbox(item)}>
+                    <div className="media-card" key={item._id} onClick={() => setLightbox(item)} style={{ position: "relative" }}>
                         <img src={getImageUrl(item)} alt={`Shared by ${getUploaderName(item)}`} loading="lazy" />
                         <div className="media-card-info">
                             <span><User size={13} /> {getUploaderName(item)}</span>
                             <span><Calendar size={13} /> {new Date(item.createdAt || item.date).toLocaleDateString()}</span>
                         </div>
+                        {canDeleteMedia(item) && (
+                            <button
+                                onClick={(e) => handleDeleteMedia(e, item._id)}
+                                style={{ position: "absolute", top: "8px", right: "8px", background: "rgba(0,0,0,0.6)", border: "none", color: "#F87171", cursor: "pointer", padding: "6px", borderRadius: "6px", opacity: 0, transition: "opacity 0.2s", zIndex: 2 }}
+                                className="media-delete-btn"
+                                title="Delete photo"
+                            >
+                                <Trash2 size={16} />
+                            </button>
+                        )}
                     </div>
                 ))}
                 {!loading && media.length === 0 && !error && (

@@ -1287,3 +1287,16 @@
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
 }
+
+/* ===== Delete button hover reveal ===== */
+.message-item:hover .msg-delete-btn {
+  opacity: 1 !important;
+}
+
+.media-card:hover .media-delete-btn {
+  opacity: 1 !important;
+}
+
+.channel-item:hover .channel-delete-icon {
+  color: #F87171;
+}

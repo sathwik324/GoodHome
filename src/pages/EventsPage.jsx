@@ -4,7 +4,7 @@ import api from "../api/axiosInstance";
 import { CalendarDays, Plus, Trash2, X, Clock } from "lucide-react";
 
 function EventsPage() {
-    const { user, groupId } = useOutletContext();
+    const { user, groupId, group } = useOutletContext();
     const navigate = useNavigate();
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -59,7 +59,9 @@ function EventsPage() {
 
     const isCreator = (event) => {
         if (!user) return false;
-        return event.createdBy === user._id || (event.createdBy?._id === user._id);
+        const isEventCreator = event.createdBy === user._id || (event.createdBy?._id === user._id);
+        const isGroupOwner = user._id === (group?.owner?._id || group?.owner);
+        return isEventCreator || isGroupOwner;
     };
 
     return (

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import api from "../api/axiosInstance";
-import { Search, UserPlus, Mail, X, Copy, Users } from "lucide-react";
+import { Search, UserPlus, Mail, X, Copy, Users, Trash2 } from "lucide-react";
 
 function MembersPage() {
-    const { user, groupId } = useOutletContext();
+    const { user, groupId, group } = useOutletContext();
     const navigate = useNavigate();
     const [members, setMembers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -78,6 +78,16 @@ function MembersPage() {
         setTimeout(() => setCopied(false), 2000);
     };
 
+    const isGroupOwner = user?._id === (group?.owner?._id || group?.owner);
+
+    const handleRemoveMember = (memberId) => {
+        if (!window.confirm("Remove this member from the group?")) return;
+        api
+            .delete(`/groups/${groupId}/members/${memberId}`)
+            .then(() => setMembers((prev) => prev.filter((m) => (m.user?._id || m._id) !== memberId)))
+            .catch((err) => setError(err.response?.data?.message || "Failed to remove member"));
+    };
+
     return (
         <div className="feature-page">
             {/* Invite Code Section */}
@@ -146,11 +156,21 @@ function MembersPage() {
                                 {(m.name || "?").charAt(0).toUpperCase()}
                                 <span className={`status-dot ${m.online ? "online" : "offline"}`} />
                             </div>
-                            <div className="member-info">
+                            <div className="member-info" style={{ flex: 1 }}>
                                 <h4>{m.name || "Unknown"}</h4>
                                 <p><Mail size={14} /> {m.email || ""}</p>
                                 <span className={`role-badge ${role.toLowerCase()}`}>{role}</span>
                             </div>
+                            {isGroupOwner && m._id !== (group?.owner?._id || group?.owner) && (
+                                <button
+                                    onClick={() => handleRemoveMember(m._id)}
+                                    className="btn-outline"
+                                    style={{ borderColor: "#F87171", color: "#F87171", padding: "6px 12px", fontSize: "0.8rem", flexShrink: 0 }}
+                                    title="Remove member"
+                                >
+                                    <Trash2 size={14} /> Remove
+                                </button>
+                            )}
                         </div>
                     );
                 })}
