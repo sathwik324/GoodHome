@@ -12,7 +12,10 @@
 
 > Dashboard — Group Workspace — Channels — Media
 
-*(Add screenshots here after UI redesign)*
+<img width="1867" height="1006" alt="image" src="https://github.com/user-attachments/assets/6718797a-ed6d-42fd-b535-d3292fea1a9b" />
+<img width="1885" height="981" alt="image" src="https://github.com/user-attachments/assets/c7c8f8be-092e-4064-a069-d25fe0fa8baf" />
+<img width="1864" height="988" alt="image" src="https://github.com/user-attachments/assets/8c416384-9f4a-4b01-aa3a-22f09ddfa04d" />
+
 
 ---
 
